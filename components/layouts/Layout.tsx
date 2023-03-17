@@ -7,7 +7,7 @@ interface Props{
     title?: string
 }
 
-const origin = (typeof window === undefined) ? '': window.location.origin;
+const origin = (typeof window === 'undefined') ? '': window.location.origin;
 
 export const Layout : FC<Props> = ({children,title}) => {
 
