@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { Button, Card, Container, Grid, Image, Text } from "@nextui-org/react";
 import confetti from 'canvas-confetti';
-import { pokeApi } from "../../api";
 import { Layout } from "../../components/layouts";
 import { Pokemon } from "../../interfaces";
 import { getPokemonInfo, localFavorites } from "../../utils";
@@ -106,6 +105,7 @@ const PokemonPage: NextPage<Props> = ({pokemon}) => {
 
 //se ejcuta de lado del servido, se ejecuta en build time
 //primero se ejecuta esto y luego pasa a getStaticProps
+//el staticPaths siempre necesita el staticProps
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
 
   const pokemons151 = [...Array(151)].map((value,index) => `${index + 1}`);
@@ -114,17 +114,30 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
    paths : pokemons151.map(id => ({
     params : {id}
    })),
-   fallback : false //si la persona pone un url y ese url no fue previamente renderizado (no existe) dara 404
+   //fallback : false //si la persona pone un url y ese url no fue previamente renderizado (no existe) dara 404
+   fallback:'blocking'//deja pasar al getStatic props
   }
 }
 
 export const getStaticProps: GetStaticProps = async (ctx) => {
   const {id} = ctx.params as { id:string };
   
+  const pokemon =  await getPokemonInfo( id );
+
+  if(!pokemon){
+    return{
+      redirect:{
+        destination:'/',
+        permanent:false
+      }
+    }
+  }
+
   return {
     props: {
-     pokemon: await getPokemonInfo( id )
+     pokemon
     }, // will be passed to the page component as props
+    revalidate: 86400,//seconds
   }
 }
 
